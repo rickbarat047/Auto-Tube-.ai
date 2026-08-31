@@ -20,6 +20,7 @@ import {
   ExternalLink,
   Youtube,
   Settings2,
+  Film,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -38,6 +39,7 @@ export const Dashboard: React.FC = () => {
     openYouTubeModal,
     openInspectModal,
     openPublishModal,
+    openVideoPreview,
   } = useApp();
 
   const activeVideos = pipelineVideos.filter((v) => v.currentStage !== 'published');
@@ -276,12 +278,23 @@ export const Dashboard: React.FC = () => {
           <div className="flex flex-wrap items-center gap-2 pt-2">
             {nextVideo && (
               <button
+                onClick={() => openVideoPreview(nextVideo)}
+                className="py-2 px-3 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-200 border border-red-500/40 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                title="Watch proxy preview of generated video"
+              >
+                <Film className="w-3.5 h-3.5 text-red-400" />
+                <span>Video Preview</span>
+              </button>
+            )}
+
+            {nextVideo && (
+              <button
                 onClick={() => openInspectModal(nextVideo)}
                 className="flex-1 py-2 px-3 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-200 border border-indigo-500/40 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 title="See what the AI generated (Video simulator, Script, SEO, Thumbnails)"
               >
                 <Eye className="w-3.5 h-3.5 text-indigo-400" />
-                <span>See What AI Created</span>
+                <span>Inspect AI</span>
               </button>
             )}
 

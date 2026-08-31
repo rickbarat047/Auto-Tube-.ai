@@ -18,7 +18,8 @@ import {
   Sliders,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { ScriptScene } from '../types';
+import { ScriptScene, PipelineVideoItem } from '../types';
+import { VideoPreview } from './VideoPreview';
 
 const SUBTITLE_STYLES = [
   { id: 'hormozi', name: 'Hormozi / Viral Pop', color: 'text-amber-300', bg: 'bg-black/80', border: 'border-amber-400/40' },
@@ -34,8 +35,11 @@ export const VideoStudio: React.FC = () => {
     isGenerating,
     setActiveView,
     openInspectModal,
+    openVideoPreview,
+    openPublishModal,
   } = useApp();
 
+  const [studioMode, setStudioMode] = useState<'editor' | 'preview'>('editor');
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentSceneIdx, setCurrentSceneIdx] = useState<number>(0);
   const [selectedSubStyle, setSelectedSubStyle] = useState(SUBTITLE_STYLES[0]);
@@ -149,22 +153,59 @@ export const VideoStudio: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5 flex-shrink-0">
+          {/* Mode Switcher */}
+          <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-1 text-xs font-semibold">
+            <button
+              onClick={() => setStudioMode('editor')}
+              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                studioMode === 'editor'
+                  ? 'bg-slate-800 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5" />
+              <span>Timeline Editor</span>
+            </button>
+            <button
+              onClick={() => setStudioMode('preview')}
+              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                studioMode === 'preview'
+                  ? 'bg-red-600 text-white shadow-md shadow-red-600/30'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Film className="w-3.5 h-3.5" />
+              <span>Video Proxy Preview</span>
+            </button>
+          </div>
+
+          {activeVideo && (
+            <button
+              onClick={() => openVideoPreview(activeVideo)}
+              className="px-3.5 py-2 rounded-xl bg-red-600/20 hover:bg-red-600/30 text-red-200 border border-red-500/40 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+              title="Pop out Fullscreen Video Proxy Preview Modal"
+            >
+              <Maximize2 className="w-3.5 h-3.5 text-red-400" />
+              <span>Popout Player</span>
+            </button>
+          )}
+
           {activeVideo && (
             <button
               onClick={() => openInspectModal(activeVideo)}
-              className="px-4 py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-200 border border-indigo-500/40 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+              className="px-3.5 py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-200 border border-indigo-500/40 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-sm"
               title="See complete AI created package"
             >
-              <Eye className="w-4 h-4 text-indigo-400" />
-              <span>See What AI Created</span>
+              <Eye className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Inspect AI</span>
             </button>
           )}
 
           <button
             disabled={isAssembling || isGenerating}
             onClick={handleProceedToThumbnails}
-            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-bold transition-all shadow-lg shadow-red-600/20 flex items-center gap-2 cursor-pointer flex-shrink-0"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-bold transition-all shadow-lg shadow-red-600/20 flex items-center gap-2 cursor-pointer flex-shrink-0"
           >
             <Sparkles className="w-4 h-4" />
             <span>{isAssembling ? 'Assembling Render...' : 'Proceed to Thumbnail AI'}</span>
@@ -173,7 +214,55 @@ export const VideoStudio: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Render Mode: Embedded Full Proxy Preview OR Timeline Editor */}
+      {studioMode === 'preview' ? (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs font-mono text-slate-400">
+              Live Preview Mode • Testing audio ducking, kinetic subtitles, and b-roll camera pans
+            </span>
+            <button
+              onClick={() => setStudioMode('editor')}
+              className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1 cursor-pointer"
+            >
+              <Sliders className="w-3.5 h-3.5" />
+              <span>Switch back to multi-track timeline</span>
+            </button>
+          </div>
+          <VideoPreview
+            video={
+              activeVideo || {
+                id: 'active-preview-temp',
+                title: 'Autonomous AI Studio Master Preview',
+                niche: 'AI & Tech',
+                format: 'long_form',
+                currentStage: 'editing',
+                stageStatuses: {},
+                script: {
+                  id: 'sc-temp',
+                  title: 'Autonomous AI Studio Master Preview',
+                  format: 'long_form',
+                  targetDurationSeconds: 180,
+                  hook: { first5Seconds: 'What if you could build an autopilot channel?', curiosityGap: 'The 4-minute method' },
+                  scenes,
+                  fullNarrationText: scenes.map((s) => s.narrationText).join(' '),
+                  wordCount: 140,
+                  estimatedReadTime: '1 min',
+                  ctaText: 'Subscribe for daily automated breakdowns',
+                },
+                estimatedCost: { llm: 0.02, voice: 0.05, image: 0.12, videoGen: 0.2, render: 0.05, total: 0.44 },
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                retryCount: 0,
+              }
+            }
+            onProceedToPublish={() => {
+              if (activeVideo) openPublishModal(activeVideo, 'publish');
+            }}
+          />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Stage Player & Multi-Track Timeline */}
         <div className="lg:col-span-2 space-y-4">
           {/* Visual Player Stage */}
@@ -372,6 +461,7 @@ export const VideoStudio: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    )}
+  </div>
+);
 };

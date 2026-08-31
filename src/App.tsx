@@ -23,6 +23,7 @@ import { ActivityLogDrawer } from './components/ActivityLogDrawer';
 import { NewVideoModal } from './components/NewVideoModal';
 import { YouTubeConnectionModal } from './components/YouTubeConnectionModal';
 import { PublishVideoModal } from './components/PublishVideoModal';
+import { VideoPreviewModal } from './components/VideoPreviewModal';
 import { WorkflowGuideBar } from './components/WorkflowGuideBar';
 import { CheckCircle2, AlertCircle, Info, AlertTriangle, Loader2 } from 'lucide-react';
 
@@ -104,6 +105,9 @@ const MainLayout: React.FC = () => {
 
       {/* Direct YouTube Video Publishing Modal */}
       <PublishVideoModal />
+
+      {/* Video Proxy Preview Player Modal */}
+      <VideoPreviewModal />
 
       {/* Dynamic Global Toast Notification */}
       {toast && (

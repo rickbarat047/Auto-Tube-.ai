@@ -53,6 +53,12 @@ interface AppContextType {
   openPublishModal: (video: PipelineVideoItem, initialTab?: 'inspect' | 'publish') => void;
   openInspectModal: (video: PipelineVideoItem) => void;
   closePublishModal: () => void;
+  // Video Preview Modal
+  isVideoPreviewOpen: boolean;
+  setIsVideoPreviewOpen: (open: boolean) => void;
+  videoForPreview: PipelineVideoItem | null;
+  openVideoPreview: (video: PipelineVideoItem) => void;
+  closeVideoPreview: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -78,6 +84,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [isPublishModalOpen, setIsPublishModalOpen] = useState<boolean>(false);
   const [videoToPublish, setVideoToPublish] = useState<PipelineVideoItem | null>(null);
   const [publishModalTab, setPublishModalTab] = useState<'inspect' | 'publish'>('inspect');
+
+  // Video preview modal states
+  const [isVideoPreviewOpen, setIsVideoPreviewOpen] = useState<boolean>(false);
+  const [videoForPreview, setVideoForPreview] = useState<PipelineVideoItem | null>(null);
+
+  const openVideoPreview = (video: PipelineVideoItem) => {
+    setVideoForPreview(video);
+    setIsVideoPreviewOpen(true);
+  };
+
+  const closeVideoPreview = () => {
+    setIsVideoPreviewOpen(false);
+    setVideoForPreview(null);
+  };
 
   const openYouTubeModal = () => setIsYouTubeModalOpen(true);
   const closeYouTubeModal = () => setIsYouTubeModalOpen(false);
@@ -319,6 +339,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         openPublishModal,
         openInspectModal,
         closePublishModal,
+        isVideoPreviewOpen,
+        setIsVideoPreviewOpen,
+        videoForPreview,
+        openVideoPreview,
+        closeVideoPreview,
       }}
     >
       {children}

@@ -14,6 +14,7 @@ import {
   Trash2,
   ChevronRight,
   Plus,
+  Film,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { PipelineStage, PipelineVideoItem } from '../types';
@@ -39,6 +40,7 @@ export const ContentPipeline: React.FC<{ onNewVideo: () => void }> = ({ onNewVid
     runFullPipelineForVideo,
     openPublishModal,
     openInspectModal,
+    openVideoPreview,
     isGenerating,
   } = useApp();
 
@@ -165,12 +167,20 @@ export const ContentPipeline: React.FC<{ onNewVideo: () => void }> = ({ onNewVid
                       {/* Card Actions */}
                       <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-1.5">
                         <button
+                          onClick={() => openVideoPreview(video)}
+                          className="flex-1 py-1 px-1.5 rounded bg-red-600/20 hover:bg-red-600/30 text-red-200 border border-red-500/30 text-[10px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
+                          title="Watch full generated proxy preview of this video with subtitles and audio"
+                        >
+                          <Film className="w-3 h-3 text-red-400" />
+                          <span>Video Preview</span>
+                        </button>
+
+                        <button
                           onClick={() => openInspectModal(video)}
-                          className="flex-1 py-1 rounded bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-200 border border-indigo-500/30 text-[10px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
-                          title="See what the AI created for this video (Video player, Script, SEO, Thumbnails)"
+                          className="py-1 px-2 rounded bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-200 border border-indigo-500/30 text-[10px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
+                          title="See what the AI created for this video (Script, SEO, Thumbnails)"
                         >
                           <Eye className="w-3 h-3 text-indigo-400" />
-                          <span>Preview AI</span>
                         </button>
 
                         <button
@@ -245,11 +255,20 @@ export const ContentPipeline: React.FC<{ onNewVideo: () => void }> = ({ onNewVid
 
               <div className="flex items-center gap-2 flex-shrink-0">
                 <button
+                  onClick={() => openVideoPreview(video)}
+                  className="px-3 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-200 border border-red-500/30 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                  title="Watch full generated proxy preview"
+                >
+                  <Film className="w-3.5 h-3.5 text-red-400" />
+                  <span>Video Preview</span>
+                </button>
+                <button
                   onClick={() => openInspectModal(video)}
                   className="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-200 border border-indigo-500/30 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                  title="Inspect AI prompt, script, and SEO package"
                 >
                   <Eye className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>Preview AI Creation</span>
+                  <span>Inspect AI</span>
                 </button>
                 <button
                   onClick={() => handleOpenVideoEditor(video)}
