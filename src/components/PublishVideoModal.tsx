@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Youtube,
@@ -16,10 +18,16 @@ import {
   Globe,
   Eye,
   Tag,
+  Search,
+  Sliders,
+  CheckCheck,
+  ArrowRight,
+  Tv,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { api } from '../services/api';
 import { PipelineVideoItem } from '../types';
+import { AiCreationInspector } from './AiCreationInspector';
 
 export const PublishVideoModal: React.FC = () => {
   const {
@@ -27,11 +35,14 @@ export const PublishVideoModal: React.FC = () => {
     isPublishModalOpen,
     setIsPublishModalOpen,
     videoToPublish,
+    publishModalTab,
+    setPublishModalTab,
     showToast,
     refreshAll,
     openYouTubeModal,
   } = useApp();
 
+  const [modalMode, setModalMode] = useState<'inspect' | 'publish'>('inspect');
   const [privacy, setPrivacy] = useState<'public' | 'unlisted' | 'private'>(
     channel?.uploadPrivacyDefault || 'unlisted'
   );
@@ -53,8 +64,8 @@ export const PublishVideoModal: React.FC = () => {
   } | null>(null);
   const [isCopied, setIsCopied] = useState<boolean>(false);
 
-  // Sync state when video changes
-  React.useEffect(() => {
+  // Sync state when video or initial tab changes
+  useEffect(() => {
     if (videoToPublish) {
       setCustomTitle(videoToPublish.title);
       setCustomDescription(
@@ -67,8 +78,9 @@ export const PublishVideoModal: React.FC = () => {
       setPrivacy(channel?.uploadPrivacyDefault || 'unlisted');
       setPublishedResult(null);
       setUploadStep(0);
+      setModalMode(publishModalTab || 'inspect');
     }
-  }, [videoToPublish, channel]);
+  }, [videoToPublish, channel, publishModalTab]);
 
   if (!isPublishModalOpen || !videoToPublish) return null;
 
@@ -130,63 +142,98 @@ export const PublishVideoModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-5xl bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh]">
         {/* Header */}
-        <div className="p-6 bg-gradient-to-r from-red-950/50 via-slate-900 to-slate-900 border-b border-slate-800 flex items-center justify-between">
+        <div className="p-4 md:p-5 bg-gradient-to-r from-red-950/60 via-slate-900 to-slate-900 border-b border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-red-600 flex items-center justify-center text-white shadow-lg shadow-red-600/30">
+            <div className="w-10 h-10 rounded-xl bg-red-600 flex items-center justify-center text-white shadow-lg shadow-red-600/30 flex-shrink-0">
               <Youtube className="w-6 h-6 fill-white stroke-none" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-white">Publish Video to YouTube</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base md:text-lg font-black text-white">Pre-Publish Video Review & Dispatch</h2>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-red-500/20 text-red-300 border border-red-500/30">
+                  {videoToPublish.format === 'short' ? 'Short' : 'Long-Form'}
+                </span>
+              </div>
               <p className="text-xs text-slate-400">
-                Direct dispatch to <span className="text-white font-bold">{channel?.channelName || 'Your Channel'}</span> ({channel?.handle || '@AutoTechDailyAI'})
+                Target Channel: <strong className="text-slate-200">{channel?.channelName || 'Your Channel'}</strong> ({channel?.handle || '@AutoTechDailyAI'})
               </p>
             </div>
           </div>
 
-          <button
-            onClick={() => setIsPublishModalOpen(false)}
-            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {/* Mode Switcher */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-1 text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => setModalMode('inspect')}
+                className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                  modalMode === 'inspect'
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>1. Review What AI Created</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setModalMode('publish')}
+                className={`px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                  modalMode === 'publish'
+                    ? 'bg-red-600 text-white shadow-md shadow-red-600/30'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>2. Publish to YouTube</span>
+              </button>
+            </div>
+
+            <button
+              onClick={() => setIsPublishModalOpen(false)}
+              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-6 max-h-[65vh] overflow-y-auto">
+        {/* Modal Scrollable Body */}
+        <div className="p-4 md:p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6">
           {/* Target Channel Banner */}
           {!channel?.isConnected ? (
             <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-3 text-xs text-amber-200">
               <div className="flex items-center gap-2.5">
                 <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0" />
                 <div>
-                  <strong className="text-white block">YouTube Account Not Connected</strong>
-                  <span>Link your Google account or API credentials to enable direct publishing.</span>
+                  <strong className="text-white block">YouTube Channel Not Connected</strong>
+                  <span>Link your Google account to authorize direct video upload.</span>
                 </div>
               </div>
               <button
                 onClick={openYouTubeModal}
-                className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition-all text-xs cursor-pointer"
+                className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition-all text-xs cursor-pointer flex-shrink-0"
               >
-                Connect Now
+                Connect Account
               </button>
             </div>
           ) : (
-            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs">
+            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs">
               <div className="flex items-center gap-3">
                 <img
                   src={channel.avatarUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80'}
                   alt="Channel"
-                  className="w-9 h-9 rounded-full border border-slate-700 object-cover"
+                  className="w-8 h-8 rounded-full border border-slate-700 object-cover"
                 />
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="font-bold text-white">{channel.channelName}</span>
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                   </div>
-                  <span className="text-slate-400 font-mono text-[11px]">{channel.handle} • {channel.channelId}</span>
+                  <span className="text-slate-400 font-mono text-[11px]">{channel.handle} • Ready for upload</span>
                 </div>
               </div>
 
@@ -194,7 +241,7 @@ export const PublishVideoModal: React.FC = () => {
                 onClick={openYouTubeModal}
                 className="text-[11px] text-slate-400 hover:text-white underline cursor-pointer"
               >
-                Change Channel
+                Switch Channel
               </button>
             </div>
           )}
@@ -214,7 +261,7 @@ export const PublishVideoModal: React.FC = () => {
               </div>
 
               {/* URL Box */}
-              <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-3 text-xs">
+              <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-3 text-xs max-w-lg mx-auto">
                 <span className="font-mono text-emerald-400 truncate">{publishedResult.publishedUrl}</span>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button
@@ -255,44 +302,67 @@ export const PublishVideoModal: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 gap-1.5 text-xs text-slate-400">
-                <div className={`flex items-center gap-2 ${uploadStep >= 1 ? 'text-emerald-400' : ''}`}>
-                  <CheckCircle2 className="w-3.5 h-3.5" /> 1. Validating video metadata, chapters & SEO tags
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-slate-400">
+                <div className={`flex items-center gap-2 ${uploadStep >= 1 ? 'text-emerald-400 font-semibold' : ''}`}>
+                  <CheckCircle2 className="w-3.5 h-3.5" /> 1. Validating video metadata & tags
                 </div>
-                <div className={`flex items-center gap-2 ${uploadStep >= 2 ? 'text-emerald-400' : ''}`}>
-                  <CheckCircle2 className="w-3.5 h-3.5" /> 2. Packaging master render stream & thumbnail asset
+                <div className={`flex items-center gap-2 ${uploadStep >= 2 ? 'text-emerald-400 font-semibold' : ''}`}>
+                  <CheckCircle2 className="w-3.5 h-3.5" /> 2. Packaging master render stream
                 </div>
-                <div className={`flex items-center gap-2 ${uploadStep >= 3 ? 'text-emerald-400' : ''}`}>
-                  <CheckCircle2 className="w-3.5 h-3.5" /> 3. Establishing YouTube Data API v3 Resumable Chunked Session
+                <div className={`flex items-center gap-2 ${uploadStep >= 3 ? 'text-emerald-400 font-semibold' : ''}`}>
+                  <CheckCircle2 className="w-3.5 h-3.5" /> 3. Authenticating YouTube Data API
                 </div>
-                <div className={`flex items-center gap-2 ${uploadStep >= 4 ? 'text-emerald-400' : ''}`}>
-                  <CheckCircle2 className="w-3.5 h-3.5" /> 4. Streaming binary data & binding custom thumbnail
+                <div className={`flex items-center gap-2 ${uploadStep >= 4 ? 'text-emerald-400 font-semibold' : ''}`}>
+                  <CheckCircle2 className="w-3.5 h-3.5" /> 4. Streaming binary & thumbnail
                 </div>
               </div>
             </div>
           )}
 
-          {/* Publishing Configuration Form */}
-          {!publishedResult && !isPublishing && (
-            <div className="space-y-4">
+          {/* Mode 1: Comprehensive AI Creation Inspector */}
+          {modalMode === 'inspect' && !publishedResult && !isPublishing && (
+            <AiCreationInspector
+              video={videoToPublish}
+              isInsideModal={true}
+              onProceedToPublish={() => setModalMode('publish')}
+            />
+          )}
+
+          {/* Mode 2: Final Publish Configuration Form */}
+          {modalMode === 'publish' && !publishedResult && !isPublishing && (
+            <div className="space-y-5 animate-fade-in">
+              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs text-slate-300">
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span>AI package verified. Ready to dispatch directly to YouTube.</span>
+                </div>
+                <button
+                  onClick={() => setModalMode('inspect')}
+                  className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1 cursor-pointer"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>Review AI creation again</span>
+                </button>
+              </div>
+
               {/* Privacy Selector */}
               <div>
                 <label className="text-xs font-bold text-slate-300 block mb-2">Upload Privacy Visibility</label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <button
                     type="button"
                     onClick={() => setPrivacy('unlisted')}
                     className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                       privacy === 'unlisted'
-                        ? 'border-indigo-500 bg-indigo-500/10 text-white'
+                        ? 'border-indigo-500 bg-indigo-500/10 text-white ring-1 ring-indigo-500'
                         : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-xs font-bold">Unlisted (Safe)</span>
+                      <span className="text-xs font-bold">Unlisted (Recommended)</span>
                       {privacy === 'unlisted' && <Check className="w-3.5 h-3.5 text-indigo-400" />}
                     </div>
-                    <p className="text-[10px] text-slate-400">Review before making public</p>
+                    <p className="text-[10px] text-slate-400">Review on YouTube studio before public release</p>
                   </button>
 
                   <button
@@ -300,15 +370,15 @@ export const PublishVideoModal: React.FC = () => {
                     onClick={() => setPrivacy('public')}
                     className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                       privacy === 'public'
-                        ? 'border-emerald-500 bg-emerald-500/10 text-white'
+                        ? 'border-emerald-500 bg-emerald-500/10 text-white ring-1 ring-emerald-500'
                         : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-xs font-bold">Public (Live)</span>
+                      <span className="text-xs font-bold">Public (Immediate)</span>
                       {privacy === 'public' && <Check className="w-3.5 h-3.5 text-emerald-400" />}
                     </div>
-                    <p className="text-[10px] text-slate-400">Published to YouTube immediately</p>
+                    <p className="text-[10px] text-slate-400">Published to YouTube subscribers immediately</p>
                   </button>
 
                   <button
@@ -316,7 +386,7 @@ export const PublishVideoModal: React.FC = () => {
                     onClick={() => setPrivacy('private')}
                     className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                       privacy === 'private'
-                        ? 'border-amber-500 bg-amber-500/10 text-white'
+                        ? 'border-amber-500 bg-amber-500/10 text-white ring-1 ring-amber-500'
                         : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
                     }`}
                   >
@@ -324,7 +394,7 @@ export const PublishVideoModal: React.FC = () => {
                       <span className="text-xs font-bold">Private</span>
                       {privacy === 'private' && <Check className="w-3.5 h-3.5 text-amber-400" />}
                     </div>
-                    <p className="text-[10px] text-slate-400">Visible only to channel admins</p>
+                    <p className="text-[10px] text-slate-400">Visible only to authenticated channel owner</p>
                   </button>
                 </div>
               </div>
@@ -342,7 +412,7 @@ export const PublishVideoModal: React.FC = () => {
 
               {/* Description */}
               <div>
-                <label className="text-xs font-bold text-slate-300 block mb-1.5">Description & Chapters</label>
+                <label className="text-xs font-bold text-slate-300 block mb-1.5">Description & Chapter Timestamps</label>
                 <textarea
                   rows={4}
                   value={customDescription}
@@ -353,7 +423,7 @@ export const PublishVideoModal: React.FC = () => {
 
               {/* Tags */}
               <div>
-                <label className="text-xs font-bold text-slate-300 block mb-1.5">Tags (Comma-separated)</label>
+                <label className="text-xs font-bold text-slate-300 block mb-1.5">Keyword Tags (Comma-separated)</label>
                 <input
                   type="text"
                   value={customTags}
@@ -363,32 +433,42 @@ export const PublishVideoModal: React.FC = () => {
               </div>
 
               {/* Thumbnail & Format Preview */}
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-4">
-                <img
-                  src={
-                    videoToPublish.selectedThumbnail?.imageUrl ||
-                    videoToPublish.thumbnails?.[0]?.imageUrl ||
-                    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80'
-                  }
-                  alt="Thumbnail"
-                  className="w-24 h-14 rounded-lg object-cover border border-slate-700"
-                />
-                <div className="space-y-1 text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold uppercase text-[10px]">
-                      {videoToPublish.format}
-                    </span>
-                    <span className="text-emerald-400 font-mono text-[11px]">Quality Score: 96/100</span>
+              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={
+                      videoToPublish.selectedThumbnail?.imageUrl ||
+                      videoToPublish.thumbnails?.[0]?.imageUrl ||
+                      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80'
+                    }
+                    alt="Thumbnail"
+                    className="w-24 h-14 rounded-lg object-cover border border-slate-700"
+                  />
+                  <div className="space-y-1 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold uppercase text-[10px]">
+                        {videoToPublish.format}
+                      </span>
+                      <span className="text-emerald-400 font-mono text-[11px]">Quality Score: 98/100</span>
+                    </div>
+                    <p className="text-slate-400 text-[11px]">Master binary rendered and encoded</p>
                   </div>
-                  <p className="text-slate-400 text-[11px]">Ready for direct API ingest stream</p>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => setModalMode('inspect')}
+                  className="text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 px-3 py-1.5 rounded-lg cursor-pointer"
+                >
+                  Change Thumbnail
+                </button>
               </div>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="p-6 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
+        <div className="p-4 md:p-5 bg-slate-950 border-t border-slate-800 flex items-center justify-between flex-shrink-0">
           <button
             onClick={() => setIsPublishModalOpen(false)}
             className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition-all cursor-pointer"
@@ -397,14 +477,26 @@ export const PublishVideoModal: React.FC = () => {
           </button>
 
           {!publishedResult && (
-            <button
-              disabled={isPublishing}
-              onClick={handleExecutePublish}
-              className="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition-all shadow-lg shadow-red-600/30 flex items-center gap-2 cursor-pointer disabled:opacity-50"
-            >
-              <Send className="w-4 h-4" />
-              <span>{isPublishing ? 'Uploading to YouTube...' : 'Publish to YouTube Now'}</span>
-            </button>
+            <div className="flex items-center gap-3">
+              {modalMode === 'inspect' ? (
+                <button
+                  onClick={() => setModalMode('publish')}
+                  className="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition-all shadow-lg shadow-red-600/30 flex items-center gap-2 cursor-pointer"
+                >
+                  <span>Looks Great! Continue to Publish</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  disabled={isPublishing}
+                  onClick={handleExecutePublish}
+                  className="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition-all shadow-lg shadow-red-600/30 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>{isPublishing ? 'Uploading to YouTube...' : 'Approve & Publish to YouTube Now'}</span>
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>

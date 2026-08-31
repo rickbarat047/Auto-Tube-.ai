@@ -27,7 +27,14 @@ const SUBTITLE_STYLES = [
 ];
 
 export const VideoStudio: React.FC = () => {
-  const { activeVideo, stepVideoStage, showToast, isGenerating, setActiveView } = useApp();
+  const {
+    activeVideo,
+    stepVideoStage,
+    showToast,
+    isGenerating,
+    setActiveView,
+    openInspectModal,
+  } = useApp();
 
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentSceneIdx, setCurrentSceneIdx] = useState<number>(0);
@@ -142,15 +149,28 @@ export const VideoStudio: React.FC = () => {
           </p>
         </div>
 
-        <button
-          disabled={isAssembling || isGenerating}
-          onClick={handleProceedToThumbnails}
-          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-bold transition-all shadow-lg shadow-red-600/20 flex items-center gap-2 cursor-pointer flex-shrink-0"
-        >
-          <Sparkles className="w-4 h-4" />
-          <span>{isAssembling ? 'Assembling Render...' : 'Proceed to Thumbnail AI'}</span>
-          <ArrowRight className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-2.5 flex-shrink-0">
+          {activeVideo && (
+            <button
+              onClick={() => openInspectModal(activeVideo)}
+              className="px-4 py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-200 border border-indigo-500/40 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+              title="See complete AI created package"
+            >
+              <Eye className="w-4 h-4 text-indigo-400" />
+              <span>See What AI Created</span>
+            </button>
+          )}
+
+          <button
+            disabled={isAssembling || isGenerating}
+            onClick={handleProceedToThumbnails}
+            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-bold transition-all shadow-lg shadow-red-600/20 flex items-center gap-2 cursor-pointer flex-shrink-0"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>{isAssembling ? 'Assembling Render...' : 'Proceed to Thumbnail AI'}</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

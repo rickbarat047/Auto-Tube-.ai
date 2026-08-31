@@ -48,7 +48,10 @@ interface AppContextType {
   isPublishModalOpen: boolean;
   setIsPublishModalOpen: (open: boolean) => void;
   videoToPublish: PipelineVideoItem | null;
-  openPublishModal: (video: PipelineVideoItem) => void;
+  publishModalTab: 'inspect' | 'publish';
+  setPublishModalTab: (tab: 'inspect' | 'publish') => void;
+  openPublishModal: (video: PipelineVideoItem, initialTab?: 'inspect' | 'publish') => void;
+  openInspectModal: (video: PipelineVideoItem) => void;
   closePublishModal: () => void;
 }
 
@@ -74,14 +77,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [isYouTubeModalOpen, setIsYouTubeModalOpen] = useState<boolean>(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState<boolean>(false);
   const [videoToPublish, setVideoToPublish] = useState<PipelineVideoItem | null>(null);
+  const [publishModalTab, setPublishModalTab] = useState<'inspect' | 'publish'>('inspect');
 
   const openYouTubeModal = () => setIsYouTubeModalOpen(true);
   const closeYouTubeModal = () => setIsYouTubeModalOpen(false);
 
-  const openPublishModal = (video: PipelineVideoItem) => {
+  const openPublishModal = (video: PipelineVideoItem, initialTab: 'inspect' | 'publish' = 'inspect') => {
     setVideoToPublish(video);
+    setPublishModalTab(initialTab);
     setIsPublishModalOpen(true);
   };
+
+  const openInspectModal = (video: PipelineVideoItem) => {
+    openPublishModal(video, 'inspect');
+  };
+
   const closePublishModal = () => {
     setIsPublishModalOpen(false);
     setVideoToPublish(null);
@@ -304,7 +314,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         isPublishModalOpen,
         setIsPublishModalOpen,
         videoToPublish,
+        publishModalTab,
+        setPublishModalTab,
         openPublishModal,
+        openInspectModal,
         closePublishModal,
       }}
     >

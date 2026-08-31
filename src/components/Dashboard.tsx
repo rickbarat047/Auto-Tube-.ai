@@ -36,6 +36,8 @@ export const Dashboard: React.FC = () => {
     isGenerating,
     runFullPipelineForVideo,
     openYouTubeModal,
+    openInspectModal,
+    openPublishModal,
   } = useApp();
 
   const activeVideos = pipelineVideos.filter((v) => v.currentStage !== 'published');
@@ -271,22 +273,44 @@ export const Dashboard: React.FC = () => {
             )}
           </div>
 
-          <div className="flex items-center gap-3 pt-2">
+          <div className="flex flex-wrap items-center gap-2 pt-2">
+            {nextVideo && (
+              <button
+                onClick={() => openInspectModal(nextVideo)}
+                className="flex-1 py-2 px-3 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-200 border border-indigo-500/40 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                title="See what the AI generated (Video simulator, Script, SEO, Thumbnails)"
+              >
+                <Eye className="w-3.5 h-3.5 text-indigo-400" />
+                <span>See What AI Created</span>
+              </button>
+            )}
+
+            {nextVideo && (nextVideo.currentStage === 'ready' || nextVideo.currentStage === 'scheduled') && (
+              <button
+                onClick={() => openPublishModal(nextVideo, 'inspect')}
+                className="py-2 px-4 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-red-600/25"
+              >
+                <Youtube className="w-3.5 h-3.5" />
+                <span>Publish Video</span>
+              </button>
+            )}
+
             {nextVideo && nextVideo.currentStage !== 'ready' && nextVideo.currentStage !== 'published' && (
               <button
                 disabled={isGenerating}
                 onClick={() => runFullPipelineForVideo(nextVideo.id)}
-                className="flex-1 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="py-2 px-3 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
-                <Bot className="w-3.5 h-3.5" />
-                <span>Run Autonomous Pipeline Now</span>
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Auto-Run AI</span>
               </button>
             )}
+
             <button
               onClick={() => setActiveView('pipeline')}
-              className="py-2.5 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-all cursor-pointer"
+              className="py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-all cursor-pointer"
             >
-              View Full Pipeline
+              Pipeline
             </button>
           </div>
         </div>

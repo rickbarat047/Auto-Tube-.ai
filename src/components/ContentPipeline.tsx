@@ -38,6 +38,7 @@ export const ContentPipeline: React.FC<{ onNewVideo: () => void }> = ({ onNewVid
     setActiveView,
     runFullPipelineForVideo,
     openPublishModal,
+    openInspectModal,
     isGenerating,
   } = useApp();
 
@@ -164,11 +165,20 @@ export const ContentPipeline: React.FC<{ onNewVideo: () => void }> = ({ onNewVid
                       {/* Card Actions */}
                       <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-1.5">
                         <button
+                          onClick={() => openInspectModal(video)}
+                          className="flex-1 py-1 rounded bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-200 border border-indigo-500/30 text-[10px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
+                          title="See what the AI created for this video (Video player, Script, SEO, Thumbnails)"
+                        >
+                          <Eye className="w-3 h-3 text-indigo-400" />
+                          <span>Preview AI</span>
+                        </button>
+
+                        <button
                           onClick={() => handleOpenVideoEditor(video)}
-                          className="flex-1 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer"
+                          className="py-1 px-2 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer"
+                          title="Edit in Studio"
                         >
                           <Edit className="w-3 h-3" />
-                          <span>Inspect</span>
                         </button>
 
                         {video.currentStage !== 'ready' && video.currentStage !== 'published' && (
@@ -185,7 +195,7 @@ export const ContentPipeline: React.FC<{ onNewVideo: () => void }> = ({ onNewVid
                         {(video.currentStage === 'ready' || video.currentStage === 'scheduled') && (
                           <button
                             disabled={isGenerating}
-                            onClick={() => openPublishModal(video)}
+                            onClick={() => openPublishModal(video, 'inspect')}
                             title="Publish to Connected YouTube Channel"
                             className="p-1 rounded bg-red-600 hover:bg-red-500 text-white text-[10px] font-bold cursor-pointer flex items-center gap-1"
                           >
@@ -233,17 +243,24 @@ export const ContentPipeline: React.FC<{ onNewVideo: () => void }> = ({ onNewVid
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 flex-shrink-0">
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={() => openInspectModal(video)}
+                  className="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-200 border border-indigo-500/30 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Eye className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Preview AI Creation</span>
+                </button>
                 <button
                   onClick={() => handleOpenVideoEditor(video)}
                   className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
                 >
-                  Edit / Inspect
+                  Edit Studio
                 </button>
                 {(video.currentStage === 'ready' || video.currentStage === 'scheduled') && (
                   <button
-                    onClick={() => openPublishModal(video)}
-                    className="px-4 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                    onClick={() => openPublishModal(video, 'inspect')}
+                    className="px-4 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md shadow-red-600/20"
                   >
                     <Upload className="w-3.5 h-3.5" />
                     <span>Publish to YouTube</span>
