@@ -1,0 +1,8 @@
+{
+  "name": "Copy of AutoTube AI",
+  "description": "Autonomous AI-powered YouTube automation platform for viral topic discovery, competitor analysis, scriptwriting, voiceover, scene editing, thumbnails, SEO, and channel publishing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
