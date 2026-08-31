@@ -36,6 +36,7 @@ export const Sidebar: React.FC = () => {
     pipelineVideos,
     activeVideo,
     openInspectModal,
+    openYouTubeModal,
   } = useApp();
 
   const inProductionCount = pipelineVideos.filter(
@@ -66,31 +67,56 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Connected Channel Quick Card */}
-      <div className="mx-3 mt-3 p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 flex items-center justify-between">
-        <div className="flex items-center gap-2 min-w-0">
-          <img
-            src={channel?.avatarUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80'}
-            alt="avatar"
-            className="w-7 h-7 rounded-full object-cover border border-slate-600 flex-shrink-0"
-          />
-          <div className="min-w-0">
-            <p className="text-xs font-semibold text-slate-200 truncate">{channel?.channelName || 'Connected Channel'}</p>
-            <p className="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              {channel?.subscriberCount?.toLocaleString() || '24.6K'} subs
-            </p>
-          </div>
-        </div>
-        <span
-          className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
-            channel?.isAutopilotRunning
-              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-              : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-          }`}
+      {channel?.isConnected ? (
+        <div
+          onClick={openYouTubeModal}
+          className="mx-3 mt-3 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 hover:border-red-500/40 transition-all flex items-center justify-between cursor-pointer group"
+          title="Click to manage YouTube channel connection"
         >
-          {channel?.isAutopilotRunning ? 'Auto' : 'Manual'}
-        </span>
-      </div>
+          <div className="flex items-center gap-2 min-w-0">
+            <img
+              src={channel.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'}
+              alt="avatar"
+              className="w-7 h-7 rounded-full object-cover border border-slate-600 flex-shrink-0"
+            />
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-slate-200 truncate group-hover:text-white">{channel.channelName}</p>
+              <p className="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                {channel.subscriberCount ? `${channel.subscriberCount.toLocaleString()} subs` : 'Connected'}
+              </p>
+            </div>
+          </div>
+          <span
+            className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
+              channel.isAutopilotRunning
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+            }`}
+          >
+            {channel.isAutopilotRunning ? 'Auto' : 'Manual'}
+          </span>
+        </div>
+      ) : (
+        <div
+          onClick={openYouTubeModal}
+          className="mx-3 mt-3 p-2.5 rounded-xl bg-gradient-to-r from-red-950/40 to-slate-900 border border-red-500/40 hover:border-red-400 transition-all flex items-center justify-between cursor-pointer group shadow-sm shadow-red-950/20"
+          title="Click to link your YouTube channel"
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-7 h-7 rounded-lg bg-red-600/30 border border-red-500/40 flex items-center justify-center text-red-300 flex-shrink-0 group-hover:scale-105 transition-transform">
+              <Youtube className="w-4 h-4 fill-red-400 stroke-none" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-red-200 truncate">No Channel Linked</p>
+              <p className="text-[10px] text-slate-400">Click to connect</p>
+            </div>
+          </div>
+          <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-red-500 text-white shadow-sm">
+            Connect
+          </span>
+        </div>
+      )}
 
       {/* Navigation List */}
       <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4 custom-scrollbar">

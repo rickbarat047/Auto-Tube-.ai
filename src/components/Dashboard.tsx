@@ -21,8 +21,62 @@ import {
   Youtube,
   Settings2,
   Film,
+  Gamepad2,
+  Dumbbell,
+  Compass,
+  ArrowRight,
+  Plus,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { api } from '../services/api';
+
+const QUICK_PRESETS = [
+  {
+    id: 'gaming',
+    channelName: 'PixelForge Gaming',
+    handle: '@PixelForgeGaming',
+    niche: 'Gaming & Esports Analytics',
+    icon: Gamepad2,
+    color: 'border-purple-500/30 text-purple-400 bg-purple-500/10',
+    category: '20',
+  },
+  {
+    id: 'finance',
+    channelName: 'WealthBlueprint',
+    handle: '@WealthBlueprintHQ',
+    niche: 'Finance & Wealth Building',
+    icon: DollarSign,
+    color: 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10',
+    category: '27',
+  },
+  {
+    id: 'fitness',
+    channelName: 'Apex Physique',
+    handle: '@ApexPhysiqueScience',
+    niche: 'Fitness & Health Science',
+    icon: Dumbbell,
+    color: 'border-amber-500/30 text-amber-400 bg-amber-500/10',
+    category: '26',
+  },
+  {
+    id: 'mystery',
+    channelName: 'Shadow Files',
+    handle: '@ShadowFilesMystery',
+    niche: 'History & Unsolved Mysteries',
+    icon: Compass,
+    color: 'border-rose-500/30 text-rose-400 bg-rose-500/10',
+    category: '24',
+  },
+  {
+    id: 'tech_ai',
+    channelName: 'AutoTech Daily',
+    handle: '@AutoTechDailyAI',
+    niche: 'AI tools & Autonomous Tech',
+    icon: Bot,
+    color: 'border-blue-500/30 text-blue-400 bg-blue-500/10',
+    category: '28',
+  },
+];
 
 export const Dashboard: React.FC = () => {
   const {
@@ -40,109 +94,179 @@ export const Dashboard: React.FC = () => {
     openInspectModal,
     openPublishModal,
     openVideoPreview,
+    refreshAll,
+    showToast,
   } = useApp();
 
+  const isConnected = channel?.isConnected;
   const activeVideos = pipelineVideos.filter((v) => v.currentStage !== 'published');
   const publishedVideos = pipelineVideos.filter((v) => v.currentStage === 'published');
   const readyOrScheduled = pipelineVideos.filter((v) => v.currentStage === 'ready' || v.currentStage === 'scheduled');
   const nextVideo = readyOrScheduled[0] || activeVideos[0];
+  const bestVideo = pipelineVideos.find((v) => v.status === 'ready' || v.status === 'published') || pipelineVideos[0];
+
+  const handleQuickConnect = async (preset: typeof QUICK_PRESETS[0]) => {
+    try {
+      showToast(`Connecting channel preset for ${preset.niche}...`, 'info');
+      await api.connectYouTube({
+        channelName: preset.channelName,
+        handle: preset.handle,
+        primaryNiche: preset.niche,
+        defaultCategoryId: preset.category,
+      });
+      showToast(`Linked "${preset.channelName}" (${preset.niche})!`, 'success');
+      await refreshAll();
+    } catch (err: any) {
+      showToast(err.message || 'Failed to connect channel', 'error');
+    }
+  };
 
   const stats = [
     {
       label: 'Total Views',
-      value: analytics?.totalViews ? analytics.totalViews.toLocaleString() : '547,350',
-      change: '+28.4%',
+      value: isConnected && channel?.totalViews ? channel.totalViews.toLocaleString() : isConnected ? '0' : '—',
+      change: isConnected ? '+24.6% this month' : 'Connect channel',
       icon: Eye,
       color: 'text-blue-400',
       bg: 'bg-blue-500/10 border-blue-500/20',
     },
     {
-      label: 'Subscribers Gained',
-      value: analytics?.totalSubscribers ? analytics.totalSubscribers.toLocaleString() : '18,450',
-      change: '+14.2%',
+      label: 'Subscribers',
+      value: isConnected && channel?.subscriberCount ? channel.subscriberCount.toLocaleString() : isConnected ? '0' : '—',
+      change: isConnected ? '+12.4% gain' : 'Connect channel',
       icon: UserPlus,
       color: 'text-emerald-400',
       bg: 'bg-emerald-500/10 border-emerald-500/20',
     },
     {
-      label: 'Average CTR',
-      value: `${analytics?.averageCtr || 8.7}%`,
-      change: '2.3x benchmark',
-      icon: Percent,
+      label: 'Channel Niche',
+      value: isConnected ? channel.primaryNiche.split('&')[0].trim() : 'Not Set',
+      change: isConnected ? `${channel.subNiches?.length || 0} sub-niches active` : 'Standby mode',
+      icon: Flame,
       color: 'text-amber-400',
       bg: 'bg-amber-500/10 border-amber-500/20',
     },
     {
-      label: 'Avg Viewer Retention',
-      value: `${analytics?.averageRetention || 64.8}%`,
-      change: '+18.6% vs niche',
+      label: 'Active Videos in Pipeline',
+      value: pipelineVideos.length.toString(),
+      change: isConnected ? `${readyOrScheduled.length} ready to upload` : '0 in production',
       icon: Clock,
       color: 'text-purple-400',
       bg: 'bg-purple-500/10 border-purple-500/20',
     },
   ];
 
-  const secondaryStats = [
-    { label: 'Videos Created', value: pipelineVideos.length, icon: Video },
-    { label: 'Published', value: publishedVideos.length, icon: CheckCircle2 },
-    { label: 'Scheduled', value: readyOrScheduled.length, icon: Calendar },
-    { label: 'Est. Total Cost', value: `$${analytics?.totalEstimatedCost?.toFixed(2) || '3.84'}`, icon: DollarSign },
-  ];
-
   return (
     <div className="space-y-6 pb-12">
-      {/* Top Banner / Autopilot Status */}
-      <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800/90 to-slate-900 border border-slate-800 relative overflow-hidden shadow-xl">
-        <div className="absolute right-0 top-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-          <div className="space-y-1.5 max-w-2xl">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-red-500/20 text-red-400 border border-red-500/30 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></span>
-                Autopilot Mode: {channel?.automationMode?.toUpperCase() || 'SEMI-AUTO'}
-              </span>
-              <span className="text-xs text-slate-400">
-                Target Niche: <strong className="text-slate-200">{channel?.primaryNiche}</strong>
-              </span>
+      {/* If Disconnected: Show Dedicated Channel Link & Niche Selector */}
+      {!isConnected && (
+        <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-red-950/30 border border-red-500/30 relative overflow-hidden shadow-2xl space-y-5">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="space-y-1.5 max-w-2xl">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+                  STANDBY MODE • NO CHANNEL LINKED
+                </span>
+              </div>
+              <h2 className="text-xl font-black text-white tracking-tight">
+                Connect Your YouTube Channel to Begin Autonomous Creation
+              </h2>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                AutoTube AI only generates research, trends, scripts, and video proxy previews tailored to the specific YouTube channel you link. Select your channel niche below or connect via Google OAuth.
+              </p>
             </div>
-            <h1 className="text-2xl font-black text-white tracking-tight">
-              Autonomous AI YouTube Command Center
-            </h1>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              AutoTube AI is actively monitoring YouTube trends, analyzing competitors, drafting original scripts, generating neural voiceovers, and optimizing SEO metadata.
-            </p>
-          </div>
 
-          {/* Quick Action Button Group */}
-          <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={openYouTubeModal}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-sm border ${
-                channel?.isConnected
-                  ? 'bg-slate-800 hover:bg-slate-700 text-white border-slate-700'
-                  : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border-amber-500/40'
-              }`}
+              className="px-5 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition-all shadow-lg shadow-red-600/30 flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap self-start lg:self-center"
             >
-              <Youtube className="w-4 h-4 fill-red-500 text-red-500" />
-              <span>{channel?.isConnected ? `Channel: ${channel.channelName}` : 'Connect YouTube Account'}</span>
-            </button>
-            <button
-              onClick={() => setActiveView('trends')}
-              className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all flex items-center gap-2 cursor-pointer shadow-sm"
-            >
-              <Flame className="w-4 h-4 text-amber-400" />
-              <span>Explore Trend Radar</span>
-            </button>
-            <button
-              onClick={() => setActiveView('pipeline')}
-              className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-red-600/25"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Open Content Pipeline</span>
+              <Youtube className="w-4 h-4 fill-white stroke-none" />
+              <span>Connect Custom YouTube Channel</span>
             </button>
           </div>
+
+          {/* 1-Click Niche Quick Selection Row */}
+          <div className="pt-2 border-t border-slate-800/80">
+            <span className="text-[11px] font-bold text-slate-400 block mb-2.5 uppercase tracking-wider">
+              Or Quick-Connect a Channel by Niche (1-Click):
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
+              {QUICK_PRESETS.map((preset) => {
+                const Icon = preset.icon;
+                return (
+                  <button
+                    key={preset.id}
+                    onClick={() => handleQuickConnect(preset)}
+                    className="p-3 rounded-xl bg-slate-950/80 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all text-left flex items-start gap-2.5 cursor-pointer group"
+                  >
+                    <div className={`p-2 rounded-lg border flex-shrink-0 ${preset.color}`}>
+                      <Icon className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-xs font-bold text-slate-200 group-hover:text-white truncate">
+                        {preset.channelName}
+                      </h4>
+                      <p className="text-[10px] text-slate-400 truncate">{preset.niche}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* If Connected: Show Connected Channel Header Banner */}
+      {isConnected && (
+        <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800/90 to-slate-900 border border-slate-800 relative overflow-hidden shadow-xl">
+          <div className="absolute right-0 top-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+            <div className="space-y-2 max-w-2xl">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  CONNECTED: {channel.channelName} ({channel.handle})
+                </span>
+                <span className="text-xs text-slate-400">
+                  Target Niche: <strong className="text-slate-200">{channel.primaryNiche}</strong>
+                </span>
+              </div>
+              <h1 className="text-2xl font-black text-white tracking-tight">
+                {channel.channelName} AI Command Center
+              </h1>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Autonomous agent loops are calibrated for <strong>{channel.primaryNiche}</strong>. Continuously discovering viral opportunities, generating scripts, and rendering proxy video previews.
+              </p>
+            </div>
+
+            {/* Quick Action Button Group */}
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={openYouTubeModal}
+                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+              >
+                <Settings2 className="w-4 h-4 text-slate-400" />
+                <span>Manage Channel Link</span>
+              </button>
+              <button
+                onClick={() => setActiveView('trends')}
+                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+              >
+                <Flame className="w-4 h-4 text-amber-400" />
+                <span>Explore {channel.primaryNiche.split(' ')[0]} Trends</span>
+              </button>
+              <button
+                onClick={() => setActiveView('pipeline')}
+                className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-red-600/25"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Open Pipeline</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Primary KPI Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -171,66 +295,69 @@ export const Dashboard: React.FC = () => {
         })}
       </div>
 
-      {/* Secondary Quick Metrics Strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {secondaryStats.map((item, idx) => {
-          const Icon = item.icon;
-          return (
-            <div key={idx} className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800/60 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-slate-800 text-slate-300">
-                <Icon className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-[11px] text-slate-400">{item.label}</div>
-                <div className="text-base font-bold text-slate-100">{item.value}</div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Middle Section: Best Performing Video & Next Scheduled Video */}
+      {/* Middle Section: Best Performing / Queued Videos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Best Performing Video Card */}
+        {/* Active / Best Video Card */}
         <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-amber-400" />
-              <h2 className="text-sm font-bold text-white uppercase tracking-wider">Best-Performing Autonomous Video</h2>
+              <h2 className="text-sm font-bold text-white uppercase tracking-wider">
+                {isConnected ? 'Featured Video Project' : 'Content Simulator'}
+              </h2>
             </div>
-            <span className="text-[11px] px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30">
-              Top CTR (11.2%)
-            </span>
+            {bestVideo && (
+              <span className="text-[11px] px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 font-bold border border-amber-500/30">
+                {bestVideo.selectedThumbnail?.predictedCtr ? `Predicted CTR: ${bestVideo.selectedThumbnail.predictedCtr}%` : 'High Viral Potential'}
+              </span>
+            )}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 p-3 rounded-xl bg-slate-950/60 border border-slate-800/80">
-            <img
-              src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&auto=format&fit=crop&q=80"
-              alt="best video thumbnail"
-              className="w-full sm:w-44 h-28 object-cover rounded-lg border border-slate-700 flex-shrink-0"
-            />
-            <div className="space-y-2 flex-1 min-w-0">
-              <h3 className="text-sm font-bold text-slate-100 line-clamp-2 leading-snug">
-                I Built a 24/7 AI YouTube Channel (Here is What It Made)
-              </h3>
-              <div className="grid grid-cols-3 gap-2 text-center text-xs pt-1">
-                <div className="p-1.5 rounded bg-slate-900 border border-slate-800">
-                  <div className="text-slate-400 text-[10px]">Views</div>
-                  <div className="font-bold text-slate-200">89.4K</div>
-                </div>
-                <div className="p-1.5 rounded bg-slate-900 border border-slate-800">
-                  <div className="text-slate-400 text-[10px]">Retention</div>
-                  <div className="font-bold text-purple-400">71.4%</div>
-                </div>
-                <div className="p-1.5 rounded bg-slate-900 border border-slate-800">
-                  <div className="text-slate-400 text-[10px]">Subs</div>
-                  <div className="font-bold text-emerald-400">+1,420</div>
+          {bestVideo ? (
+            <div className="flex flex-col sm:flex-row gap-4 p-3 rounded-xl bg-slate-950/60 border border-slate-800/80">
+              <img
+                src={bestVideo.selectedThumbnail?.imageUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&auto=format&fit=crop&q=80'}
+                alt="video thumbnail"
+                className="w-full sm:w-44 h-28 object-cover rounded-lg border border-slate-700 flex-shrink-0"
+              />
+              <div className="space-y-2 flex-1 min-w-0">
+                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                  {bestVideo.niche || 'General'}
+                </span>
+                <h3 className="text-sm font-bold text-slate-100 line-clamp-2 leading-snug">
+                  {bestVideo.title}
+                </h3>
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    onClick={() => openVideoPreview(bestVideo)}
+                    className="px-3 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-200 border border-red-500/40 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Film className="w-3 h-3 text-red-400" />
+                    <span>Watch Preview</span>
+                  </button>
+                  <button
+                    onClick={() => openInspectModal(bestVideo)}
+                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-all cursor-pointer"
+                  >
+                    Inspect Script & SEO
+                  </button>
                 </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="p-8 rounded-xl bg-slate-950/40 border border-dashed border-slate-800 text-center text-slate-400 text-xs space-y-2">
+              <p>No video projects in pipeline.</p>
+              <button
+                onClick={() => setActiveView('trends')}
+                className="text-red-400 hover:underline font-semibold"
+              >
+                Discover trending topics to create one →
+              </button>
+            </div>
+          )}
+
           <p className="text-xs text-slate-400">
-            💡 <strong className="text-slate-300">AI Intelligence Insight:</strong> High curiosity hook in the first 6s generated a 22% higher retention hold throughout the 8-minute runtime.
+            💡 <strong className="text-slate-300">Niche Calibration:</strong> Video scripts and visual hooks dynamically match the tone and retention patterns of {channel?.primaryNiche || 'your target audience'}.
           </p>
         </div>
 
@@ -252,7 +379,7 @@ export const Dashboard: React.FC = () => {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
-                      {nextVideo.format === 'short' ? '⚡ 50s YouTube Short' : '🎬 Long-Form Video (8m)'}
+                      {nextVideo.format === 'short' ? '⚡ 50s YouTube Short' : '🎬 Long-Form Video'}
                     </span>
                     <h3 className="text-sm font-bold text-slate-100 mt-2">{nextVideo.title}</h3>
                   </div>
@@ -331,7 +458,7 @@ export const Dashboard: React.FC = () => {
 
       {/* Bottom Section: Real-time Agent Activity Feed & Recent Trends */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Real-time AI Agent Activity Feed (Mandatory per Section 1) */}
+        {/* Real-time AI Agent Activity Feed */}
         <div className="lg:col-span-2 p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -391,26 +518,38 @@ export const Dashboard: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            {trends.slice(0, 3).map((trend) => (
-              <div
-                key={trend.id}
-                className="p-3 rounded-lg bg-slate-950/60 border border-slate-800/80 space-y-2 hover:border-slate-700 transition-all"
-              >
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-emerald-400 font-mono">Score: {trend.viralScore}/100</span>
-                  <span className="text-[10px] text-slate-400">{trend.source}</span>
-                </div>
-                <p className="text-xs font-semibold text-slate-200 line-clamp-2">{trend.potentialTitle}</p>
-                <button
-                  disabled={isGenerating}
-                  onClick={() => createVideoFromTrend(trend)}
-                  className="w-full py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[11px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            {trends.length > 0 ? (
+              trends.slice(0, 3).map((trend) => (
+                <div
+                  key={trend.id}
+                  className="p-3 rounded-lg bg-slate-950/60 border border-slate-800/80 space-y-2 hover:border-slate-700 transition-all"
                 >
-                  <Sparkles className="w-3 h-3 text-red-400" />
-                  <span>Create Video Project</span>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-emerald-400 font-mono">Score: {trend.viralScore}/100</span>
+                    <span className="text-[10px] text-slate-400">{trend.source}</span>
+                  </div>
+                  <p className="text-xs font-semibold text-slate-200 line-clamp-2">{trend.potentialTitle}</p>
+                  <button
+                    disabled={isGenerating}
+                    onClick={() => createVideoFromTrend(trend)}
+                    className="w-full py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[11px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Sparkles className="w-3 h-3 text-red-400" />
+                    <span>Create Video Project</span>
+                  </button>
+                </div>
+              ))
+            ) : (
+              <div className="p-6 rounded-lg bg-slate-950/40 border border-dashed border-slate-800 text-center text-xs text-slate-400 space-y-2">
+                <p>No trends discovered yet.</p>
+                <button
+                  onClick={() => setActiveView('trends')}
+                  className="text-red-400 hover:underline font-semibold"
+                >
+                  Scan Trends for Your Niche →
                 </button>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
