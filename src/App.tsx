@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Sidebar } from './components/Sidebar';

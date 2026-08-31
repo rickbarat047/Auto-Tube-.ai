@@ -1,4 +1,4 @@
-import { ChannelProfile, PipelineVideoItem, ChannelAnalyticsOverview } from '../src/types.js';
+import { ChannelProfile, PipelineVideoItem, ChannelAnalyticsOverview } from '@/src/types';
 
 export interface YouTubeUploadPayload {
   title: string;

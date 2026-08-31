@@ -8,7 +8,7 @@ import {
   SeoPackage,
   QualityCheckResult,
   ContentFormat,
-} from '../src/types.js';
+} from '@/src/types';
 
 let aiInstance: GoogleGenAI | null = null;
 
